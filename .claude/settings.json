@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /d/MyProject/minibot && export HTTP_PROXY=http://127.0.0.1:7890 && export HTTPS_PROXY=http://127.0.0.1:7890 && git add -A && git diff --cached --quiet || (git commit -m 'auto: session changes' && git push)"
+          }
+        ]
+      }
+    ]
+  }
+}
