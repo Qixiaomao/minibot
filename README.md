@@ -1,8 +1,15 @@
 # 🐱 MiniBot
 
+**[中文](#中文)** | **[English](#english)**
+
+---
+
+<a id="中文"></a>
+## 中文
+
 一个轻量级的 AI 聊天机器人框架，基于 MiMo 大模型，支持工具调用（Function Calling）和长期记忆。
 
-## 项目架构
+### 项目架构
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -35,7 +42,7 @@
 └──────────────────────────────────────────────────┘
 ```
 
-## 核心模块
+### 核心模块
 
 | 模块 | 文件 | 职责 |
 |------|------|------|
@@ -47,7 +54,7 @@
 | **Built-in Tools** | `builtin_tools.py` | 内置工具：时间查询、计算器、文件读写、命令执行 |
 | **TTS** | `tts.py` | MiMo-V2.5-TTS 语音合成（可选） |
 
-## 工作流程
+### 工作流程
 
 ```
 用户消息 → Channel.recv()
@@ -65,15 +72,15 @@
          Channel.send() → 用户
 ```
 
-## 快速开始
+### 快速开始
 
-### 1. 安装依赖
+#### 1. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
+#### 2. 配置环境变量
 
 复制 `.env.example` 为 `.env`，填入你的密钥：
 
@@ -88,13 +95,13 @@ cp .env.example .env
 | `MIMO_BASE_URL` | MiMo API 地址 |
 | `MIMO_MODEL` | 模型名称，默认 `mimo-v2.5-pro` |
 
-### 3. 运行
+#### 3. 运行
 
 ```bash
 python main.py
 ```
 
-## 内置工具
+### 内置工具
 
 | 工具 | 功能 |
 |------|------|
@@ -103,6 +110,120 @@ python main.py
 | `read_file` | 读取本地文件（workspace 内） |
 | `write_file` | 写入本地文件（workspace 内） |
 | `exec` | 执行 shell 命令（30s 超时） |
+
+---
+
+<a id="english"></a>
+## English
+
+A lightweight AI chatbot framework powered by MiMo LLM, with support for Function Calling and long-term memory.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     main.py                         │
+│                 (Entry & Glue Layer)                │
+└───────┬──────────┬──────────┬──────────┬────────────┘
+        │          │          │          │
+        ▼          ▼          ▼          ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ channel  │ │  agent   │ │ context  │ │  memory  │
+│ Messaging│ │ LLM Call │ │ Context  │ │  Long-   │
+│ Channels │ │ + Tools  │ │ Manager  │ │  Term    │
+└────┬─────┘ └────┬─────┘ └────┬─────┘ │  Memory  │
+     │            │            │       └────┬─────┘
+     │            ▼            │            │
+     │     ┌──────────┐       │            │
+     │     │  tools   │       │            │
+     │     │  Tool    │       │            │
+     │     │ Registry │       │            │
+     │     └────┬─────┘       │            │
+     │          │             │            │
+     │          ▼             │            │
+     │   ┌────────────┐      │            │
+     │   │builtin_tools│      │            │
+     │   │  Built-in   │      │            │
+     │   │   Tools     │      │            │
+     │   └────────────┘      │            │
+     │                       │            │
+     ▼                       ▼            ▼
+┌──────────────────────────────────────────────────┐
+│               Telegram / Stdin                    │
+│                  User Interface                   │
+└──────────────────────────────────────────────────┘
+```
+
+### Core Modules
+
+| Module | File | Description |
+|--------|------|-------------|
+| **Channel** | `channel.py` | Messaging abstraction layer, supports Telegram Bot and terminal Stdin |
+| **Agent** | `agent.py` | LLM invocation + Function Calling loop, auto-executes tools and feeds results back |
+| **Context** | `context.py` | Sliding-window context management, auto-compresses into summary when exceeding token limit |
+| **Memory** | `memory.py` | File-based long-term memory (MEMORY.md + history.jsonl) |
+| **Tools** | `tools.py` | Tool registry, provides OpenAI Function Calling format schemas |
+| **Built-in Tools** | `builtin_tools.py` | Built-in tools: time query, calculator, file read/write, command execution |
+| **TTS** | `tts.py` | MiMo-V2.5-TTS voice synthesis (optional) |
+
+### Workflow
+
+```
+User message → Channel.recv()
+                  ↓
+             ContextBuffer.add_message()
+                  ↓
+             Token limit exceeded? → Yes → consolidate() compress into summary
+                  ↓ No
+             Agent.chat(messages)
+                  ↓
+             LLM returns tool_calls?
+                  ├─ Yes → Execute tools → Feed results back into messages → Call LLM again (loop)
+                  └─ No  → Return text response
+                  ↓
+             Channel.send() → User
+```
+
+### Quick Start
+
+#### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 2. Configure environment variables
+
+Copy `.env.example` to `.env` and fill in your keys:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description |
+|----------|-------------|
+| `TELEGRAM_TOKEN` | Telegram Bot Token (get from @BotFather) |
+| `MIMO_API_KEY` | MiMo API key |
+| `MIMO_BASE_URL` | MiMo API endpoint |
+| `MIMO_MODEL` | Model name, defaults to `mimo-v2.5-pro` |
+
+#### 3. Run
+
+```bash
+python main.py
+```
+
+### Built-in Tools
+
+| Tool | Function |
+|------|----------|
+| `get_time` | Get current date and time |
+| `calculator` | Evaluate math expressions |
+| `read_file` | Read local files (within workspace) |
+| `write_file` | Write local files (within workspace) |
+| `exec` | Execute shell commands (30s timeout) |
+
+---
 
 ## License
 
